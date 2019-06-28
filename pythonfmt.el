@@ -28,10 +28,8 @@
   :type 'string
   :group 'pythonfmt)
 
-;;;###autoload
 (defun pythonfmt ()
   "Format the current buffer according to the pythonfmt tool."
-  (interactive)
   (unless (executable-find pythonfmt-command)
     (error "Cant not find %s in the exe path" pythonfmt-command))
   (let (our-command-args)
@@ -40,7 +38,6 @@
                             (append our-command-args
                                     (list pythonfmt-command-args (buffer-file-name)))
                             " "))
-    (message our-command-args)
     (apply #'call-process-region (list (point-min) (point-max)
                                        "/bin/bash"
                                        nil nil nil
@@ -49,6 +46,19 @@
                                         pythonfmt-command
                                         " "
                                         our-command-args)))))
+
+;;;###autoload
+(define-minor-mode pythonfmt-mode
+  "Enable formate-on-save for python mode buffers via python format tools."
+  :lighter " fmt"
+  (if pythonfmt-mode
+      (add-hook 'before-save-hook 'pythonfmt-before-save t t)
+    (remove-hook 'before-save-hook 'pythonfmt-before-save t)))
+
+(defun pythonfmt-before-save ()
+  "Format buffer via pythonfmt if major mode is a python mode."
+  (interactive)
+  (pythonfmt))
 
 (provide 'pythonfmt)
 ;;; pythonfmt.el ends here
